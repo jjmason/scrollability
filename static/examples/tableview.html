@@ -79,8 +79,8 @@ html {
 
 </style>
 
-<script type="text/javascript" src="/scrollability.min.js"></script>
-
+<script type="text/javascript" src="../../scrollability.js"></script>
+<link rel="stylesheet" href="../../static/scrollbar.css">
 <script language="javascript">
 
 var names = [
@@ -148,18 +148,9 @@ addEventListener('DOMContentLoaded', function() {
             break;
         }
     }
+    Scrollability.init();
 });
-
-document.addEventListener('touchstart', function(event) {
-    // Prevent text selection
-    //event.preventDefault();
-}, false);
-
-document.addEventListener('mousedown', function(event) {
-    // Prevent text selection
-    event.preventDefault();
-}, false);
-
+ 
 </script>
     
 </head>

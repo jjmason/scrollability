@@ -1,7 +1,10 @@
 /* See LICENSE for terms of usage */
 
-"style scrollability/scrollbar.css"
+(function(exports){
 
+//Global namespace	
+var Scrollability = {};
+exports.Scrollability = Scrollability;
 // var logs = [];
 
 // function D() {
@@ -34,7 +37,7 @@ var kStoppedThreshold = 4;
 var kLockThreshold = 10;
 
 // Percentage of the page which content can be overscrolled before it must bounce back
-var kBounceLimit = 0.75;
+var kBounceLimit = 0.0;
 
 // Rate of deceleration when content has overscrolled and is slowing down before bouncing back
 var kBounceDecelRate = 0.01;
@@ -74,27 +77,13 @@ var directions = {
     'vertical': createYDirection
 };
 
-exports.directions = directions;
-
-exports.flashIndicators = function() {
-    // var scrollables = document.querySelectorAll('.scrollable.vertical');
-    // for (var i = 0; i < scrollables.length; ++i) {
-    //     exports.scrollTo(scrollables[i], 0, 0, 20, true);
-    // }            
-}
-
-function onLoad() {
+Scrollability.init = function(options) {
+    document.body.addEventListener(isTouch ? 'touchstart' : 'mousedown', onTouchStart, false);
     var ss = document.createElement("style");
     document.head.appendChild(ss);
     globalStyleSheet = document.styleSheets[document.styleSheets.length-1];
+};
 
-    // exports.flashIndicators();
-}
-
-require.ready(function() {
-    document.addEventListener(isTouch ? 'touchstart' : 'mousedown', onTouchStart, false);
-    window.addEventListener('load', onLoad, false);
-});
 
 function onTouchStart(event) {
     var touch = isTouch ? event.touches[0] : event;
@@ -179,7 +168,7 @@ function onTouchStart(event) {
 
 function wrapAnimator(animator, startX, startY, startTime) {
     var node = animator.node;
-    var constrained = animator.constrained;
+    var constrained = true;//animator.constrained;
     var paginated = animator.paginated;
     var viewport = animator.viewport || 0;
     var scrollbar = animator.scrollbar;
@@ -286,16 +275,28 @@ function wrapAnimator(animator, startX, startY, startTime) {
 
         // Apply resistance along the edges
         if (constrained) {
-            if (position > max && absMax == max) {
+            if (position > max) {
                 var excess = position - max;
                 velocity *= (1.0 - excess / bounceLimit)*kBounceLimit;
-            } else if (position < min && absMin == min) {
+                //Don't do it
+                position = max;
+                velocity = 0;
+            } else if (position < min) {
                 var excess = min - position;
                 velocity *= (1.0 - excess / bounceLimit)*kBounceLimit;
+                position = min;
+                velocity = 0;
             }
         }
 
         position += velocity;
+
+		//Lock into the bounds
+		if( position > max ){
+			position = max;
+		}else if(position < min){
+			position = min;
+		}
 
         update(position);
 
@@ -441,7 +442,7 @@ function wrapAnimator(animator, startX, startY, startTime) {
                     // Slowing down
                     var excess = position - max;
                     var elasticity = (1.0 - excess / bounceLimit);
-                    velocity = Math.max(velocity - kBounceDecelRate, 0) * elasticity;
+                    velocity = 0;//Math.max(velocity - kBounceDecelRate, 0) * elasticity;
                     // D&&D('slowing down', velocity);
                     position += velocity;
                 } else {
@@ -451,8 +452,8 @@ function wrapAnimator(animator, startX, startY, startTime) {
                         decelDelta = max - position;
                     }
                     // D&&D('bouncing back');
-                    position = easeOutExpo(decelStep, decelOrigin, decelDelta, bounceTime);
-                    continues = ++decelStep <= bounceTime && Math.floor(Math.abs(position)) > max;
+                    position = max;//easeOutExpo(decelStep, decelOrigin, decelDelta, bounceTime);
+                    continues = false;//++decelStep <= bounceTime && Math.floor(Math.abs(position)) > max;
                 }
             } else if (position < min && constrained) {
                 if (velocity < 0) {
@@ -462,8 +463,8 @@ function wrapAnimator(animator, startX, startY, startTime) {
                     // Slowing down
                     var excess = min - position;
                     var elasticity = (1.0 - excess / bounceLimit);
-                    velocity = Math.min(velocity + kBounceDecelRate, 0) * elasticity;
-                    position += velocity;
+                    velocity = 0;//Math.min(velocity + kBounceDecelRate, 0) * elasticity;
+                    position = min;
                 } else {
                     // Bouncing back
                     if (!decelStep) {
@@ -473,8 +474,8 @@ function wrapAnimator(animator, startX, startY, startTime) {
                         // decelTime = bounceTime * (-enterVelocity / 10);
                         // D&&D(decelTime);
                     }
-                    position = easeOutExpo(decelStep, decelOrigin, decelDelta, bounceTime);
-                    continues = ++decelStep <= bounceTime && Math.ceil(position) < min;
+                    position = min;//easeOutExpo(decelStep, decelOrigin, decelDelta, bounceTime);
+                    continues = false;//++decelStep <= bounceTime && Math.ceil(position) < min;
                 }
             } else {
                 continues = Math.floor(Math.abs(velocity)*10) > 0;
@@ -786,3 +787,7 @@ function dispatch(name, target, props) {
 
     return target.dispatchEvent(e);
 }
+
+
+
+})(this);
