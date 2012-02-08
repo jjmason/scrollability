@@ -1,6 +1,6 @@
 /* See LICENSE for terms of usage */
 
-(function(exports){
+ (function(exports){
 
 //Global namespace	
 var Scrollability = {};
